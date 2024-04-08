@@ -1,0 +1,61 @@
+name: Update the repository
+
+on:
+  push:
+    branches:
+      - cirruslabs
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: Update the repository (${{ matrix.reference }})
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        reference: [v3, v4]
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Establish the committer identity
+        continue-on-error: false
+        run: |
+          git config --global user.name "Cirrus Labs"
+          git config --global user.email "support@cirruslabs.org"
+
+      - name: Add "actions/cache" as a Git remote and fetch it
+        continue-on-error: false
+        run: |
+          git remote add upstream https://github.com/actions/cache.git
+          git fetch upstream --tags --force
+
+      - name: Checkout to a new branch that is pointing to ${{ matrix.reference }}
+        continue-on-error: false
+        run: |
+          git checkout -B ${{ matrix.reference }} ${{ matrix.reference }}
+
+      - name: Remove the workflow directory
+        continue-on-error: false
+        run: |
+          rm -rf .github/workflows
+
+      - name: Apply Cirrus Labs modifications
+        continue-on-error: false
+        run: |
+          printf "%s\n%s" "$(git show cirruslabs:modification.js)" "$(cat dist/restore/index.js)" > dist/restore/index.js
+          printf "%s\n%s" "$(git show cirruslabs:modification.js)" "$(cat dist/restore-only/index.js)" > dist/restore-only/index.js
+          printf "%s\n%s" "$(git show cirruslabs:modification.js)" "$(cat dist/save/index.js)" > dist/save/index.js
+          printf "%s\n%s" "$(git show cirruslabs:modification.js)" "$(cat dist/save-only/index.js)" > dist/save-only/index.js
+
+      - name: Commit and push the changes
+        continue-on-error: false
+        run: |
+          git add . && git commit -m "Cirrus Labs modifications"
+
+      - name: Force-push to the "${{ matrix.reference }}" branch
+        run: git push -f origin refs/heads/${{ matrix.reference }}
