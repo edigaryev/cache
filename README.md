@@ -28,6 +28,15 @@ These modifications are then re-pushed to the corresponding major tags (e.g. `v4
      key: node_modules
 ```
 
+## Running with your own implementation of GitHub Actions Cache API
+
+If you have implemented the GitHub Actions Cache API alongside self-hosted runners, you can enable its use by setting the `CIRRUS_HTTP_CACHE_HOST` environment variable when starting your runner:
+
+```bash
+export CIRRUS_HTTP_CACHE_HOST=cache.internal:8080
+./run.sh
+```
+
 ## Why?
 
 Because the following PRs were closed/not merged yet:
